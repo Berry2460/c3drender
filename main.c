@@ -98,6 +98,7 @@ void drawTriangle(char *buffer, int *v1, int *v2, int *v3){
 			int ydist=abs(end[1]-start[1]);
 			unsigned int size=1<<(sizeof(int)*8-1);
 			int ysign=1-(((unsigned int)((dy)&size))>>(sizeof(int)*8-2));
+			//int ysign=abs(dy)/dy;
 			int slope=(dx<<10)/dy;
 			for (int i=1; i<=ydist; i++){
 				for (int j=((ysign*i*slope)>>10)+1+start[0]; j<=fixup[0]; j++){
@@ -187,8 +188,7 @@ int main(){
 
 	char flag1=0;
 	char flag2=0;
-	
-	int frames=0;
+
 	while (1){
 		clearBuffer(buffer);
 		drawTriangle(buffer, v1, v2, v3);
