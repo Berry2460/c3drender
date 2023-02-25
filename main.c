@@ -40,7 +40,7 @@ int dotProd(int *v1, int *v2, int dimensions){
 }
 
 int *line2D(int *v1, int *v2){
-	int *out=malloc(sizeof(int)*3);
+	int *out=malloc(sizeof(int)*2);
 	out[0]=v2[0]-v1[0];
 	out[1]=v2[1]-v1[1];
 	return out;
