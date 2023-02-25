@@ -98,9 +98,9 @@ void drawTriangle(char *buffer, int *v1, int *v2, int *v3){
 			int ydist=abs(end[1]-start[1]);
 			unsigned int size=1<<(sizeof(int)*8-1);
 			int ysign=1-(((unsigned int)((dy)&size))>>(sizeof(int)*8-2));
-			float slope=(float)(dx)/dy;
+			int slope=(dx<<10)/dy;
 			for (int i=1; i<=ydist; i++){
-				for (int j=(int)(ysign*i*slope)+1+start[0]; j<=fixup[0]; j++){
+				for (int j=((ysign*i*slope)>>10)+1+start[0]; j<=fixup[0]; j++){
 					int y=ysign*i+start[1]-(pass*ysign);
 					int p[2]={j, y};
 					int *p1=line2D(v1, p);
