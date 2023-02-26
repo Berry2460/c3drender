@@ -79,7 +79,7 @@ void drawTriangle(char *buffer, int *depthBuffer, Triangle t){
 	int *v1=t.v1->vertex;
 	int *v2=t.v2->vertex;
 	int *v3=t.v3->vertex;
-	char shades[8]={'.', ',', ';', 'x', 'X', '%', '@', '#'};
+	char shades[7]={'.', ',', ':', ';', '+', '%', '#'};
 	int *e1=subtract(v1, v2, 2);
 	int *e2=subtract(v2, v3, 2);
 	int *e3=subtract(v3, v1, 2);
@@ -239,10 +239,10 @@ int main(){
 	v3.vertex=vd3;
 	v4.vertex=vd4;
 	v5.vertex=vd5;
-	v1.shade=2;
-	v2.shade=3;
-	v3.shade=8;
-	v4.shade=2;
+	v1.shade=1;
+	v2.shade=2;
+	v3.shade=7;
+	v4.shade=1;
 	v5.shade=0;
 
 	t1.v1=&v1;
