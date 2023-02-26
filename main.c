@@ -5,23 +5,51 @@
 #define SCREEN_X 48
 #define SCREEN_Y 32
 
-char *initBuffer();
-void clearBuffer(char *buffer);
+typedef struct Vertex{
+	int *vertex;
+	char shade;
+}Vertex;
+
+typedef struct Triangle{
+	Vertex *v1;
+	Vertex *v2;
+	Vertex *v3;
+}Triangle;
+
+char *initScreenBuffer();
+void clearScreenBuffer(char *buffer);
+int *initDepthBuffer();
+void clearDepthBuffer(int *buffer);
 int cross2D(int *v1, int *v2);
 int dotProd(int *v1, int *v2, int dimensions);
-void drawTriangle(char *buffer, int *v1, int *v2, int *v3);
+int *subtract(int *v1, int *v2, int dimensions);
+void drawTriangle(char *buffer, int *depthBuffer, Triangle t);
 void drawBuffer(char *buffer);
 
-char *initBuffer(){
+
+char *initScreenBuffer(){
 	char *buffer=malloc(sizeof(char)*SCREEN_Y*SCREEN_X);
-	clearBuffer(buffer);
+	clearScreenBuffer(buffer);
 	return buffer;
 }
 
-void clearBuffer(char *buffer){
+void clearScreenBuffer(char *buffer){
 	for (int i=0; i<SCREEN_Y; i++){
 		for (int j=0; j<SCREEN_X; j++){
 			buffer[i*SCREEN_X+j]=' ';
+		}
+	}
+}
+
+int *initDepthBuffer(){
+	int *buffer=calloc(SCREEN_Y*SCREEN_X, sizeof(int));
+	return buffer;
+}
+
+void clearDepthBuffer(int *buffer){
+	for (int i=0; i<SCREEN_Y; i++){
+		for (int j=0; j<SCREEN_X; j++){
+			buffer[i*SCREEN_X+j]=0;
 		}
 	}
 }
@@ -39,24 +67,28 @@ int dotProd(int *v1, int *v2, int dimensions){
 	return out;
 }
 
-int *line2D(int *v1, int *v2){
-	int *out=malloc(sizeof(int)*2);
-	out[0]=v2[0]-v1[0];
-	out[1]=v2[1]-v1[1];
+int *subtract(int *v1, int *v2, int dimensions){
+	int *out=malloc(sizeof(int)*dimensions);
+	for (int i=0; i<dimensions; i++){
+		out[i]=v2[i]-v1[i];
+	}
 	return out;
 }
 
-void drawTriangle(char *buffer, int *v1, int *v2, int *v3){
-	char shades[7]={'.', ',', ';', 'x', 'X', '@', '#'};
-	int *e1=line2D(v1, v2);
-	int *e2=line2D(v2, v3);
-	int *e3=line2D(v3, v1);
+void drawTriangle(char *buffer, int *depthBuffer, Triangle t){
+	int *v1=t.v1->vertex;
+	int *v2=t.v2->vertex;
+	int *v3=t.v3->vertex;
+	char shades[8]={'.', ',', ';', 'x', 'X', '%', '@', '#'};
+	int *e1=subtract(v1, v2, 2);
+	int *e2=subtract(v2, v3, 2);
+	int *e3=subtract(v3, v1, 2);
 	int area=cross2D(e1, e2);
 	if (cross2D(e1, e2) > 0 && cross2D(e2 ,e3) > 0 && cross2D(e3, e1) > 0){
 		int *start;
 		int *end;
 		int *fixup;
-		if (v1[0] < v2[0] && v1[0] < v3[0]){
+		if (v1[0] <= v2[0] && v1[0] <= v3[0]){
 			start=v1;
 			if (v2[0] < v3[0]){
 				end=v2;
@@ -67,7 +99,7 @@ void drawTriangle(char *buffer, int *v1, int *v2, int *v3){
 				fixup=v2;
 			}
 		}
-		else if (v2[0] < v1[0] && v2[0] < v3[0]){
+		else if (v2[0] <= v1[0] && v2[0] <= v3[0]){
 			start=v2;
 			if (v1[0] < v3[0]){
 				end=v1;
@@ -78,7 +110,7 @@ void drawTriangle(char *buffer, int *v1, int *v2, int *v3){
 				fixup=v1;
 			}
 		}
-		else{
+		else if (v3[0] <= v1[0] && v3[0] <= v2[0]){
 			start=v3;
 			if (v1[0] < v2[0]){
 				end=v1;
@@ -100,26 +132,34 @@ void drawTriangle(char *buffer, int *v1, int *v2, int *v3){
 			int ysign=1-(((unsigned int)((dy)&size))>>(sizeof(int)*8-2));
 			//int ysign=abs(dy)/dy;
 			int slope=(dx<<10)/dy;
-			for (int i=1; i<=ydist; i++){
-				for (int j=((ysign*i*slope)>>10)+1+start[0]; j<=fixup[0]; j++){
+			for (int i=0; i<=ydist; i++){
+				char draw=0;
+				for (int j=((ysign*i*slope)>>10)+start[0]; j<=fixup[0]; j++){
 					int y=ysign*i+start[1]-(pass*ysign);
-					int p[2]={j, y};
-					int *p1=line2D(v1, p);
-					int *p2=line2D(v2, p);
-					int *p3=line2D(v3, p);
+					int p[3]={j, y, 0};
+					int *p1=subtract(v1, p, 3);
+					int *p2=subtract(v2, p, 3);
+					int *p3=subtract(v3, p, 3);
 					int cross1=cross2D(e1, p1);
 					int cross2=cross2D(e2, p2);
 					int cross3=cross2D(e3, p3);
 					free(p1);
 					free(p2);
 					free(p3);
+					p[2]=(v1[2]*(cross1<<10)/area + v2[2]*(cross2<<10)/area + v3[2]*(cross3<<10)/area)>>10;
+					int shade=((t.v3->shade*cross1) + (t.v1->shade*cross2) + (t.v2->shade*cross3))/area;
+					int index=y*SCREEN_X+j;
 					if ((cross1 > 0 && cross2 > 0 && cross3 > 0) || (cross1 < 0 && cross2 < 0 && cross3 < 0)){
-						int shade=(cross1*7)/area;
-						buffer[y*SCREEN_X+j]=shades[shade];
+						if (depthBuffer[index] > p[2] || depthBuffer[index] == 0 || 1){
+							buffer[index]=shades[shade];
+							depthBuffer[index]=p[2];
+						}
+						draw=1;
 					}
-					else{
+					else if (draw == 1){
 						break;
 					}
+					
 				}
 			}
 			if (pass == 0 && (fixup[1] < start[1] || fixup[1] > end[1])){
@@ -154,13 +194,13 @@ void drawBuffer(char *buffer){
 }
 
 void routine(int *v, char *flag){
-	if (v[0] > 6 && *flag == 0){
+	if (v[0] > 8 && *flag == 0){
 		v[0]--;
 	}
 	else if (v[0] < 28 && *flag == 1){
 		v[0]++;
 	}
-	if (*flag == 0 && v[0] == 6){
+	if (*flag == 0 && v[0] == 8){
 		*flag=1;
 	}
 	else if (*flag == 1 && v[0] == 28){
@@ -177,27 +217,48 @@ void wait(int sec){
 }
 
 int main(){
-	char *buffer=initBuffer();
-	int v1[2]={1, 5};
-	int v2[2]={20, 1};
-	int v3[2]={28, 18};
+	char *buffer=initScreenBuffer();
+	int *dbuffer=initDepthBuffer();
+	Triangle t1;
+	Triangle t2;
+	Vertex v1;
+	Vertex v2;
+	Vertex v3;
+	Vertex v4;
+	int vd1[3]={1, 5, 12};
+	int vd2[3]={20, 1, 2};
+	int vd3[3]={28, 18, 6};
+	int vd4[3]={35, 4, 4};
 
-	int v21[2]={20, 1};
-	int v22[2]={25, 7};
-	int v23[2]={28, 18};
+	v1.vertex=vd1;
+	v2.vertex=vd2;
+	v3.vertex=vd3;
+	v4.vertex=vd4;
+	v1.shade=0;
+	v2.shade=0;
+	v3.shade=8;
+	v4.shade=0;
 
-	char flag1=0;
-	char flag2=0;
+	t1.v1=&v1;
+	t1.v2=&v2;
+	t1.v3=&v3;
+
+	t2.v1=&v3;
+	t2.v2=&v2;
+	t2.v3=&v4;
+
+	char flag=0;
 
 	while (1){
-		clearBuffer(buffer);
-		drawTriangle(buffer, v1, v2, v3);
-		drawTriangle(buffer, v21, v22, v23);
+		clearScreenBuffer(buffer);
+		clearDepthBuffer(dbuffer);
+		drawTriangle(buffer, dbuffer, t1);
+		drawTriangle(buffer, dbuffer, t2);
 		drawBuffer(buffer);
-		routine(v3, &flag1);
-		routine(v23, &flag2);
+		routine(v3.vertex, &flag);
 		wait(50);
 	}
 	free(buffer);
+	free(dbuffer);
 	return 0;
 }
