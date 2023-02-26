@@ -16,6 +16,16 @@ typedef struct Triangle{
 	Vertex *v3;
 }Triangle;
 
+typedef struct Model{
+	Triangle *geometry;
+	int size;
+	int index;
+}Model;
+
+Model createModel(int size);
+void pushModel(Model *model, Triangle tri);
+Triangle createTriangle(Vertex *v1, Vertex *v2, Vertex *v3);
+Vertex createVertex(int x, int y, int z, int shade);
 char *initScreenBuffer();
 void clearScreenBuffer(char *buffer);
 int *initDepthBuffer();
@@ -26,6 +36,45 @@ int *subtract(int *v1, int *v2, int dimensions);
 void drawTriangle(char *buffer, int *depthBuffer, Triangle t);
 void drawBuffer(char *buffer);
 
+Model createModel(int size){
+	Model out;
+	out.geometry=malloc(sizeof(Triangle)*size);
+	out.size=size;
+	out.index=0;
+	return out;
+}
+
+void pushModel(Model *model, Triangle tri){
+	if (model->index < model->size){
+		model->geometry[model->index]=tri;
+		model->index++;
+	}
+}
+
+void drawModel(char *buffer, int *depthBuffer, Model *model){
+	for (int i=0; i<model->index; i++){
+		drawTriangle(buffer, depthBuffer, model->geometry[i]);
+	}
+}
+
+Triangle createTriangle(Vertex *v1, Vertex *v2, Vertex *v3){
+	Triangle out;
+	out.v1=v1;
+	out.v2=v2;
+	out.v3=v3;
+	return out;
+}
+
+Vertex createVertex(int x, int y, int z, int shade){
+	Vertex out;
+	int *v=malloc(sizeof(int)*3);
+	v[0]=x;
+	v[1]=y;
+	v[2]=z;
+	out.vertex=v;
+	out.shade=shade;
+	return out;
+}
 
 char *initScreenBuffer(){
 	char *buffer=malloc(sizeof(char)*SCREEN_Y*SCREEN_X);
@@ -79,7 +128,7 @@ void drawTriangle(char *buffer, int *depthBuffer, Triangle t){
 	int *v1=t.v1->vertex;
 	int *v2=t.v2->vertex;
 	int *v3=t.v3->vertex;
-	char shades[7]={'.', ',', ':', ';', '+', '%', '#'};
+	char shades[7]={'.', ';', '/', '+', 'x', 'X', '@'};
 	int *e1=subtract(v1, v2, 2);
 	int *e2=subtract(v2, v3, 2);
 	int *e3=subtract(v3, v1, 2);
@@ -219,47 +268,23 @@ void wait(int sec){
 int main(){
 	char *buffer=initScreenBuffer();
 	int *dbuffer=initDepthBuffer();
-	Triangle t1;
-	Triangle t2;
-	Triangle t3;
-	Triangle t4;
-	Vertex v1;
-	Vertex v2;
-	Vertex v3;
-	Vertex v4;
-	Vertex v5;
-	int vd1[3]={6, 8, 12};
-	int vd2[3]={25, 4, 2};
-	int vd3[3]={29, 20, 6};
-	int vd4[3]={40, 7, 4};
-	int vd5[3]={24, 0, 6};
 
-	v1.vertex=vd1;
-	v2.vertex=vd2;
-	v3.vertex=vd3;
-	v4.vertex=vd4;
-	v5.vertex=vd5;
-	v1.shade=1;
-	v2.shade=2;
-	v3.shade=7;
-	v4.shade=1;
-	v5.shade=0;
+	Vertex v1=createVertex(6, 8, 12, 1);
+	Vertex v2=createVertex(25, 4, 2, 2);
+	Vertex v3=createVertex(29, 20, 6, 7);
+	Vertex v4=createVertex(40, 7, 4, 1);
+	Vertex v5=createVertex(24, 0, 6, 0);
 
-	t1.v1=&v1;
-	t1.v2=&v2;
-	t1.v3=&v3;
+	Triangle t1=createTriangle(&v1, &v2, &v3);
+	Triangle t2=createTriangle(&v3, &v2, &v4);
+	Triangle t3=createTriangle(&v1, &v5, &v2);
+	Triangle t4=createTriangle(&v2, &v5, &v4);
 
-	t2.v1=&v3;
-	t2.v2=&v2;
-	t2.v3=&v4;
-
-	t3.v1=&v1;
-	t3.v2=&v5;
-	t3.v3=&v2;
-
-	t4.v1=&v2;
-	t4.v2=&v5;
-	t4.v3=&v4;
+	Model model=createModel(4);
+	pushModel(&model, t1);
+	pushModel(&model, t2);
+	pushModel(&model, t3);
+	pushModel(&model, t4);
 
 	char flag1=0;
 	char flag2=1;
@@ -267,10 +292,7 @@ int main(){
 	while (1){
 		clearScreenBuffer(buffer);
 		clearDepthBuffer(dbuffer);
-		drawTriangle(buffer, dbuffer, t1);
-		drawTriangle(buffer, dbuffer, t2);
-		drawTriangle(buffer, dbuffer, t3);
-		drawTriangle(buffer, dbuffer, t4);
+		drawModel(buffer, dbuffer, &model);
 		drawBuffer(buffer);
 		routine(v3.vertex, &flag1);
 		routine(v5.vertex, &flag2);
