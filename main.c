@@ -135,7 +135,7 @@ void drawTriangle(char *buffer, int *depthBuffer, Triangle t){
 			for (int i=0; i<=ydist; i++){
 				char draw=0;
 				for (int j=((ysign*i*slope)>>10)+start[0]; j<=fixup[0]; j++){
-					int y=ysign*i+start[1]-(pass*ysign);
+					int y=ysign*i+start[1];
 					int p[3]={j, y, 0};
 					int *p1=subtract(v1, p, 3);
 					int *p2=subtract(v2, p, 3);
@@ -150,7 +150,7 @@ void drawTriangle(char *buffer, int *depthBuffer, Triangle t){
 					int shade=((t.v3->shade*cross1) + (t.v1->shade*cross2) + (t.v2->shade*cross3))/area;
 					int index=y*SCREEN_X+j;
 					if ((cross1 > 0 && cross2 > 0 && cross3 > 0) || (cross1 < 0 && cross2 < 0 && cross3 < 0)){
-						if (depthBuffer[index] > p[2] || depthBuffer[index] == 0 || 1){
+						if (depthBuffer[index] > p[2] || depthBuffer[index] == 0){
 							buffer[index]=shades[shade];
 							depthBuffer[index]=p[2];
 						}
@@ -194,16 +194,16 @@ void drawBuffer(char *buffer){
 }
 
 void routine(int *v, char *flag){
-	if (v[0] > 8 && *flag == 0){
+	if (v[0] > 16 && *flag == 0){
 		v[0]--;
 	}
-	else if (v[0] < 28 && *flag == 1){
+	else if (v[0] < 31 && *flag == 1){
 		v[0]++;
 	}
-	if (*flag == 0 && v[0] == 8){
+	if (*flag == 0 && v[0] == 16){
 		*flag=1;
 	}
-	else if (*flag == 1 && v[0] == 28){
+	else if (*flag == 1 && v[0] == 31){
 		*flag=0;
 	}
 }
@@ -221,23 +221,29 @@ int main(){
 	int *dbuffer=initDepthBuffer();
 	Triangle t1;
 	Triangle t2;
+	Triangle t3;
+	Triangle t4;
 	Vertex v1;
 	Vertex v2;
 	Vertex v3;
 	Vertex v4;
-	int vd1[3]={1, 5, 12};
-	int vd2[3]={20, 1, 2};
-	int vd3[3]={28, 18, 6};
-	int vd4[3]={35, 4, 4};
+	Vertex v5;
+	int vd1[3]={6, 8, 12};
+	int vd2[3]={25, 4, 2};
+	int vd3[3]={29, 20, 6};
+	int vd4[3]={40, 7, 4};
+	int vd5[3]={24, 0, 6};
 
 	v1.vertex=vd1;
 	v2.vertex=vd2;
 	v3.vertex=vd3;
 	v4.vertex=vd4;
-	v1.shade=0;
-	v2.shade=0;
+	v5.vertex=vd5;
+	v1.shade=2;
+	v2.shade=3;
 	v3.shade=8;
-	v4.shade=0;
+	v4.shade=2;
+	v5.shade=0;
 
 	t1.v1=&v1;
 	t1.v2=&v2;
@@ -247,15 +253,27 @@ int main(){
 	t2.v2=&v2;
 	t2.v3=&v4;
 
-	char flag=0;
+	t3.v1=&v1;
+	t3.v2=&v5;
+	t3.v3=&v2;
+
+	t4.v1=&v2;
+	t4.v2=&v5;
+	t4.v3=&v4;
+
+	char flag1=0;
+	char flag2=1;
 
 	while (1){
 		clearScreenBuffer(buffer);
 		clearDepthBuffer(dbuffer);
 		drawTriangle(buffer, dbuffer, t1);
 		drawTriangle(buffer, dbuffer, t2);
+		drawTriangle(buffer, dbuffer, t3);
+		drawTriangle(buffer, dbuffer, t4);
 		drawBuffer(buffer);
-		routine(v3.vertex, &flag);
+		routine(v3.vertex, &flag1);
+		routine(v5.vertex, &flag2);
 		wait(50);
 	}
 	free(buffer);
