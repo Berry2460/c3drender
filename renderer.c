@@ -3,6 +3,19 @@
 
 #include "renderer.h"
 
+static int cross2D(int *v1, int *v2){
+	int out=v1[0]*v2[1]-v1[1]*v2[0];
+	return out;
+}
+
+static int *subtract(int *v1, int *v2, int dimensions){
+	int *out=malloc(sizeof(int)*dimensions);
+	for (int i=0; i<dimensions; i++){
+		out[i]=v2[i]-v1[i];
+	}
+	return out;
+}
+
 Model createModel(int size){
 	Model out;
 	out.geometry=malloc(sizeof(Triangle)*size);
@@ -68,27 +81,6 @@ void clearDepthBuffer(int *buffer){
 			buffer[i*SCREEN_X+j]=0;
 		}
 	}
-}
-
-int cross2D(int *v1, int *v2){
-	int out=v1[0]*v2[1]-v1[1]*v2[0];
-	return out;
-}
-
-int dotProd(int *v1, int *v2, int dimensions){
-	int out=0;
-	for (int i=0; i<dimensions; i++){
-		out+=v1[i]*v2[i];
-	}
-	return out;
-}
-
-int *subtract(int *v1, int *v2, int dimensions){
-	int *out=malloc(sizeof(int)*dimensions);
-	for (int i=0; i<dimensions; i++){
-		out[i]=v2[i]-v1[i];
-	}
-	return out;
 }
 
 void drawTriangle(char *buffer, int *depthBuffer, Triangle t){

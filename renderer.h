@@ -30,9 +30,6 @@ char *initScreenBuffer();
 void clearScreenBuffer(char *buffer);
 int *initDepthBuffer();
 void clearDepthBuffer(int *buffer);
-int cross2D(int *v1, int *v2);
-int dotProd(int *v1, int *v2, int dimensions);
-int *subtract(int *v1, int *v2, int dimensions);
 void drawTriangle(char *buffer, int *depthBuffer, Triangle t);
 void drawBuffer(char *buffer);
 #endif
