@@ -174,8 +174,13 @@ void drawTriangle(char *buffer, int *depthBuffer, Triangle t){
 		char pass=0;
 		while (done == 0){
 			done=pass;
-			int dx=end[0]-start[0];
 			int dy=end[1]-start[1];
+			if (dy == 0){
+				pass=1;
+				end=fixup;
+				continue;
+			}
+			int dx=end[0]-start[0];
 			int ydist=abs(end[1]-start[1]);
 			unsigned int size=1<<(sizeof(int)*8-1);
 			int ysign=1-(((unsigned int)((dy)&size))>>(sizeof(int)*8-2));
@@ -256,6 +261,21 @@ void routine(int *v, char *flag){
 		*flag=0;
 	}
 }
+void routiney(int *v, char *flag){
+	//printf("%d\n",v[1]);
+	if (v[1] > 3 && *flag == 0){
+		v[1]--;
+	}
+	else if (v[1] < 8 && *flag == 1){
+		v[1]++;
+	}
+	if (*flag == 0 && v[1] == 3){
+		*flag=1;
+	}
+	else if (*flag == 1 && v[1] == 8){
+		*flag=0;
+	}
+}
 
 void wait(int sec){
 	#ifdef _WIN32
@@ -288,6 +308,7 @@ int main(){
 
 	char flag1=0;
 	char flag2=1;
+	char flag3=0;
 
 	while (1){
 		clearScreenBuffer(buffer);
@@ -296,7 +317,9 @@ int main(){
 		drawBuffer(buffer);
 		routine(v3.vertex, &flag1);
 		routine(v5.vertex, &flag2);
-		wait(50);
+		routiney(v2.vertex, &flag3);
+		routine(v2.vertex, &flag3);
+		wait(80);
 	}
 	free(buffer);
 	free(dbuffer);
