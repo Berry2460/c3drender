@@ -1,7 +1,7 @@
 #include "windows.h"
 
 #include "renderer.h"
-
+#include "stdio.h"
 void routine(int *v, char *flag){
 	if (v[0] > 16 && *flag == 0){
 		v[0]--;
@@ -17,16 +17,16 @@ void routine(int *v, char *flag){
 	}
 }
 void routiney(int *v, char *flag){
-	if (v[1] > 3 && *flag == 0){
+	if (v[1] > 4 && *flag == 0){
 		v[1]--;
 	}
-	else if (v[1] < 8 && *flag == 1){
+	else if (v[1] < 10 && *flag == 1){
 		v[1]++;
 	}
-	if (*flag == 0 && v[1] == 3){
+	if (*flag == 0 && v[1] == 4){
 		*flag=1;
 	}
-	else if (*flag == 1 && v[1] == 8){
+	else if (*flag == 1 && v[1] == 10){
 		*flag=0;
 	}
 }
@@ -63,6 +63,8 @@ int main(){
 	char flag1=0;
 	char flag2=1;
 	char flag3=0;
+	char flag4=0;
+
 	while (1){
 		clearScreenBuffer(buffer);
 		clearDepthBuffer(dbuffer);
@@ -71,7 +73,7 @@ int main(){
 		routine(v3.vertex, &flag1);
 		routine(v5.vertex, &flag2);
 		routiney(v2.vertex, &flag3);
-		routine(v2.vertex, &flag3);
+		routine(v2.vertex, &flag4);
 		wait(80);
 	}
 	free(buffer);
