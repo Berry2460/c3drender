@@ -1,7 +1,7 @@
 #include "windows.h"
 
 #include "renderer.h"
-#include "stdio.h"
+
 void routine(int *v, char *flag){
 	if (v[0] > 16 && *flag == 0){
 		v[0]--;
